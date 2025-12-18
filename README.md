@@ -46,7 +46,7 @@ uv run fastapi dev main.py
 Make a PUT request to trigger a background task:
 
 ```bash
-curl -X PUT http://localhost:8000/items/42
+curl -X PUT http://localhost:8000/sleep-for/42
 ```
 
-The request will return immediately with `{"message": "Task started"}`, and you'll see the task complete in the Celery worker logs after 10 seconds.
+The request will return immediately with `{"message": "Task started"}`, and you'll see the task complete in the Celery worker logs after the specified number of seconds.

@@ -17,7 +17,7 @@ def read_item(item_id: int, q: Union[str, None] = None):
     return {"item_id": item_id, "q": q}
 
 
-@app.put("/items/{item_id}")
-def create_item(item_id: int):
-    long_running_task.delay(item_id)  # type: ignore[attr-defined]
+@app.put("/sleep-for/{time_seconds}")
+def sleep_for(time_seconds: int):
+    long_running_task.delay(time_seconds)  # type: ignore[attr-defined]
     return {"message": "Task started"}
