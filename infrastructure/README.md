@@ -81,6 +81,16 @@ worker_scaledobject = CustomResource(
 )
 ```
 
+## Getting started
+
+```bash
+# Store Pulumi state locally, rather than in Pulumi cloud
+pulumi login file://.
+
+# Set your local k8s context. I recommend https://orbstack.dev/ for Mac users.
+pulumi config set kubernetes:context orbstack
+```
+
 ## Deployment
 
 ```bash

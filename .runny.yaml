@@ -1,3 +1,6 @@
 commands:
   docker-build:
     run: cd app && docker build -t celery-demo .
+
+  pulumi-login:
+    run: cd infrastructure && pulumi login file://.
