@@ -1,8 +1,10 @@
+import os
+
 from celery import Celery
 
 celery = Celery(
     "celery_demo",
-    broker="amqp://guest:guest@localhost:5672//",
+    broker=os.getenv("CELERY_BROKER_URL", "amqp://guest:guest@localhost:5672//"),
     backend="rpc://",
 )
 

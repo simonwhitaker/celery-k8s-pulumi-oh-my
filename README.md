@@ -1,30 +1,41 @@
 # Getting started
 
-## 1. Start RabbitMQ
+## Running with Docker (recommended)
 
-Start the RabbitMQ broker using Docker Compose:
+Start everything with Docker Compose:
 
 ```bash
-docker compose up -d
+docker compose up --build
 ```
 
-The RabbitMQ management UI will be available at http://localhost:15672 (guest/guest).
+This starts RabbitMQ, the FastAPI web server, and the Celery worker.
 
-## 2. Install dependencies
+- Web server: http://localhost:8000
+- RabbitMQ management UI: http://localhost:15672 (guest/guest)
+
+## Running locally
+
+### 1. Start RabbitMQ
+
+```bash
+docker compose up rabbitmq -d
+```
+
+### 2. Install dependencies
 
 ```bash
 uv sync
 ```
 
-## 3. Start the Celery worker
+### 3. Start the Celery worker
 
-In a separate terminal, run:
+In a separate terminal:
 
 ```bash
 uv run celery -A tasks worker --loglevel=info
 ```
 
-## 4. Start the FastAPI server
+### 4. Start the FastAPI server
 
 ```bash
 uv run fastapi dev main.py
@@ -38,4 +49,4 @@ Make a PUT request to trigger a background task:
 curl -X PUT http://localhost:8000/items/42
 ```
 
-The request will return immediately with `{"message": "Task started"}`, and you'll see the task complete in the Celery worker terminal after 10 seconds.
+The request will return immediately with `{"message": "Task started"}`, and you'll see the task complete in the Celery worker logs after 10 seconds.
