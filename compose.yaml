@@ -14,20 +14,20 @@ services:
       retries: 3
 
   web:
-    build: .
+    build: ./app
     ports:
       - "8000:8000"
     environment:
       CELERY_BROKER_URL: amqp://guest:guest@rabbitmq:5672//
     volumes:
-      - .:/app
+      - ./app:/app
     command: uv run fastapi dev main.py --host 0.0.0.0
     depends_on:
       rabbitmq:
         condition: service_healthy
 
   worker:
-    build: .
+    build: ./app
     command: uv run celery -A tasks worker --loglevel=info
     environment:
       CELERY_BROKER_URL: amqp://guest:guest@rabbitmq:5672//
