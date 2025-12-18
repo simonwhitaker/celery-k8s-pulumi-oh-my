@@ -9,6 +9,7 @@ web_labels = {"app": "web"}
 
 web = k8s.apps.v1.Deployment(
     "web",
+    metadata=k8s.meta.v1.ObjectMetaArgs(labels=web_labels),
     spec=k8s.apps.v1.DeploymentSpecArgs(
         selector=k8s.meta.v1.LabelSelectorArgs(match_labels=web_labels),
         replicas=2,
