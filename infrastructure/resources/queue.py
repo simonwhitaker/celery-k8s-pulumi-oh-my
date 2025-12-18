@@ -4,6 +4,7 @@ from pulumi_kubernetes.apps.v1 import Deployment, DeploymentSpecArgs
 from pulumi_kubernetes.core.v1 import (
     ContainerArgs,
     ContainerPortArgs,
+    EnvVarArgs,
     PodSpecArgs,
     PodTemplateSpecArgs,
     Service,
@@ -29,6 +30,18 @@ _rabbit = Deployment(
                         ports=[
                             ContainerPortArgs(container_port=5672),
                             ContainerPortArgs(container_port=15672),
+                            ContainerPortArgs(container_port=15692, name="prometheus"),
+                        ],
+                        env=[
+                            EnvVarArgs(
+                                name="RABBITMQ_SERVER_ADDITIONAL_ERL_ARGS",
+                                value="-rabbitmq_prometheus return_per_object_metrics true",
+                            ),
+                        ],
+                        command=["bash", "-c"],
+                        args=[
+                            "rabbitmq-plugins enable rabbitmq_prometheus && "
+                            "exec docker-entrypoint.sh rabbitmq-server"
                         ],
                     ),
                 ]
@@ -57,6 +70,12 @@ rabbit_service = Service(
                 port=15672,
                 target_port=15672,
                 name="management",
+            ),
+            ServicePortArgs(
+                protocol="TCP",
+                port=15692,
+                target_port=15692,
+                name="prometheus",
             ),
         ],
         type="ClusterIP",

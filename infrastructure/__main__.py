@@ -14,6 +14,7 @@ from pulumi_kubernetes.core.v1 import (
 from pulumi_kubernetes.meta.v1 import LabelSelectorArgs, ObjectMetaArgs
 
 import resources.worker  # noqa: F401
+import resources.monitoring  # noqa: F401
 from resources.queue import celery_broker_url
 
 web_labels = {"app": "web"}
