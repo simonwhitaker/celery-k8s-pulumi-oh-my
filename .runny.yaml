@@ -2,5 +2,19 @@ commands:
   docker-build:
     run: cd app && docker build -t celery-demo .
 
+  pulumi-install:
+    if: "! command -v pulumi"
+    run: brew install pulumi
+
   pulumi-login:
+    needs:
+      - pulumi-install
     run: cd infrastructure && pulumi login file://.
+
+  pulumi-up:
+    needs:
+      - docker-build
+      - pulumi-install
+    env:
+      - PULUMI_CONFIG_PASSPHRASE=
+    run: cd infrastructure && pulumi up
