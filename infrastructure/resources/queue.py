@@ -1,39 +1,28 @@
-"""A Kubernetes Python Pulumi program"""
-
-from pulumi_kubernetes.apps.v1 import Deployment, DeploymentSpecArgs
-from pulumi_kubernetes.core.v1 import (
-    ContainerArgs,
-    ContainerPortArgs,
-    EnvVarArgs,
-    PodSpecArgs,
-    PodTemplateSpecArgs,
-    Service,
-    ServicePortArgs,
-    ServiceSpecArgs,
-)
-from pulumi_kubernetes.meta.v1 import LabelSelectorArgs, ObjectMetaArgs
+import pulumi_kubernetes as k8s
 
 RABBIT_SERVICE_NAME = "rabbitmq"
 
-_rabbit = Deployment(
+_rabbit = k8s.apps.v1.Deployment(
     "rabbitmq",
-    spec=DeploymentSpecArgs(
-        selector=LabelSelectorArgs(match_labels={"app": "rabbitmq"}),
+    spec=k8s.apps.v1.DeploymentSpecArgs(
+        selector=k8s.meta.v1.LabelSelectorArgs(match_labels={"app": "rabbitmq"}),
         replicas=1,
-        template=PodTemplateSpecArgs(
-            metadata=ObjectMetaArgs(labels={"app": "rabbitmq"}),
-            spec=PodSpecArgs(
+        template=k8s.core.v1.PodTemplateSpecArgs(
+            metadata=k8s.meta.v1.ObjectMetaArgs(labels={"app": "rabbitmq"}),
+            spec=k8s.core.v1.PodSpecArgs(
                 containers=[
-                    ContainerArgs(
+                    k8s.core.v1.ContainerArgs(
                         name="rabbitmq",
                         image="rabbitmq:3-management",
                         ports=[
-                            ContainerPortArgs(container_port=5672),
-                            ContainerPortArgs(container_port=15672),
-                            ContainerPortArgs(container_port=15692, name="prometheus"),
+                            k8s.core.v1.ContainerPortArgs(container_port=5672),
+                            k8s.core.v1.ContainerPortArgs(container_port=15672),
+                            k8s.core.v1.ContainerPortArgs(
+                                container_port=15692, name="prometheus"
+                            ),
                         ],
                         env=[
-                            EnvVarArgs(
+                            k8s.core.v1.EnvVarArgs(
                                 name="RABBITMQ_SERVER_ADDITIONAL_ERL_ARGS",
                                 value="-rabbitmq_prometheus return_per_object_metrics true",
                             ),
@@ -50,28 +39,28 @@ _rabbit = Deployment(
     ),
 )
 
-rabbit_service = Service(
+rabbit_service = k8s.core.v1.Service(
     "rabbitmq-service",
-    metadata=ObjectMetaArgs(
+    metadata=k8s.meta.v1.ObjectMetaArgs(
         name="rabbitmq",
         labels={"app": "rabbitmq"},
     ),
-    spec=ServiceSpecArgs(
+    spec=k8s.core.v1.ServiceSpecArgs(
         selector={"app": "rabbitmq"},
         ports=[
-            ServicePortArgs(
+            k8s.core.v1.ServicePortArgs(
                 protocol="TCP",
                 port=5672,
                 target_port=5672,
                 name="rabbitmq",
             ),
-            ServicePortArgs(
+            k8s.core.v1.ServicePortArgs(
                 protocol="TCP",
                 port=15672,
                 target_port=15672,
                 name="management",
             ),
-            ServicePortArgs(
+            k8s.core.v1.ServicePortArgs(
                 protocol="TCP",
                 port=15692,
                 target_port=15692,
@@ -86,16 +75,16 @@ celery_broker_url = rabbit_service.metadata.apply(
     lambda metadata: f"amqp://guest:guest@{metadata.name}:5672//"
 )
 
-rabbit_management_lb = Service(
+rabbit_management_lb = k8s.core.v1.Service(
     "rabbitmq-management-lb",
-    metadata=ObjectMetaArgs(
+    metadata=k8s.meta.v1.ObjectMetaArgs(
         name="rabbitmq-management-lb",
         labels={"app": "rabbitmq"},
     ),
-    spec=ServiceSpecArgs(
+    spec=k8s.core.v1.ServiceSpecArgs(
         selector={"app": "rabbitmq"},
         ports=[
-            ServicePortArgs(
+            k8s.core.v1.ServicePortArgs(
                 protocol="TCP",
                 port=15672,
                 target_port=15672,

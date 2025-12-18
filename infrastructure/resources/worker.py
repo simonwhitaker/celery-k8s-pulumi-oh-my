@@ -1,36 +1,25 @@
-"""A Kubernetes Python Pulumi program"""
-
 import pulumi
-from pulumi_kubernetes.apps.v1 import Deployment, DeploymentSpecArgs
-from pulumi_kubernetes.apiextensions import CustomResource
-from pulumi_kubernetes.core.v1 import (
-    ContainerArgs,
-    EnvVarArgs,
-    PodSpecArgs,
-    PodTemplateSpecArgs,
-    ResourceRequirementsArgs,
-)
-from pulumi_kubernetes.meta.v1 import LabelSelectorArgs, ObjectMetaArgs
+import pulumi_kubernetes as k8s
 
+from resources.monitoring import keda, prometheus_server_url
 from resources.queue import rabbit_service
-from resources.monitoring import prometheus_server_url, keda
 
 celery_broker_url = rabbit_service.metadata.apply(
     lambda metadata: f"amqp://guest:guest@{metadata.name}:5672//"
 )
 
 
-worker = Deployment(
+worker = k8s.apps.v1.Deployment(
     "worker",
-    spec=DeploymentSpecArgs(
-        selector=LabelSelectorArgs(match_labels={"app": "worker"}),
+    spec=k8s.apps.v1.DeploymentSpecArgs(
+        selector=k8s.meta.v1.LabelSelectorArgs(match_labels={"app": "worker"}),
         replicas=1,
-        template=PodTemplateSpecArgs(
-            metadata=ObjectMetaArgs(labels={"app": "worker"}),
-            spec=PodSpecArgs(
+        template=k8s.core.v1.PodTemplateSpecArgs(
+            metadata=k8s.meta.v1.ObjectMetaArgs(labels={"app": "worker"}),
+            spec=k8s.core.v1.PodSpecArgs(
                 termination_grace_period_seconds=300,  # 5 min for tasks to complete
                 containers=[
-                    ContainerArgs(
+                    k8s.core.v1.ContainerArgs(
                         name="worker",
                         image="celery-demo",
                         image_pull_policy="Never",
@@ -44,31 +33,31 @@ worker = Deployment(
                             "--loglevel=info",
                         ],
                         env=[
-                            EnvVarArgs(
+                            k8s.core.v1.EnvVarArgs(
                                 name="CELERY_BROKER_URL",
                                 value=celery_broker_url,
                             ),
-                            EnvVarArgs(
+                            k8s.core.v1.EnvVarArgs(
                                 name="CELERYD_PREFETCH_MULTIPLIER",
                                 value="1",  # Only prefetch 1 task to minimize lost work
                             ),
                         ],
-                        resources=ResourceRequirementsArgs(
+                        resources=k8s.core.v1.ResourceRequirementsArgs(
                             requests={"cpu": "100m", "memory": "128Mi"},
                             limits={"cpu": "500m", "memory": "512Mi"},
                         ),
                     ),
-                ]
+                ],
             ),
         ),
     ),
 )
 
-worker_scaledobject = CustomResource(
+worker_scaledobject = k8s.apiextensions.CustomResource(
     "worker-scaledobject",
     api_version="keda.sh/v1alpha1",
     kind="ScaledObject",
-    metadata=ObjectMetaArgs(
+    metadata=k8s.meta.v1.ObjectMetaArgs(
         name="worker-scaledobject",
     ),
     spec={
