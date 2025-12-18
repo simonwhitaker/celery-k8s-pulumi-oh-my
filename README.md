@@ -27,10 +27,10 @@ runny pulumi-up
 
 ## Testing the task
 
-Make a PUT request to trigger a background task:
+Make a GET request to trigger a background task:
 
 ```bash
-curl -X PUT http://localhost:8000/sleep-for/60
+curl http://web.k8s.orb.local/sleep-for/30
 ```
 
 The request will return immediately with `{"message": "Task started"}`, and you'll see the task complete in the Celery worker logs after the specified number of seconds.
