@@ -1,0 +1,3 @@
+commands:
+  docker-build:
+    run: docker build -t celery-demo .
