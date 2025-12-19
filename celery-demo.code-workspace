@@ -1,0 +1,18 @@
+{
+  "folders": [
+    {
+      "path": "infrastructure"
+    },
+    {
+      "path": "app"
+    }
+  ],
+  "settings": {
+    "python.analysis.packageIndexDepths": [
+      {
+        "name": "pulumi_kubernetes",
+        "depth": 3
+      }
+    ]
+  }
+}
