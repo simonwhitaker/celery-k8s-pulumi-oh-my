@@ -42,10 +42,11 @@ This can be handy if you've hacked on the app code and want to quickly test it o
 Start everything with Docker Compose:
 
 ```bash
+cd app
 docker compose up --build
 ```
 
 This starts RabbitMQ, the FastAPI web server, and the Celery worker.
 
-- Web server: http://localhost:8000
-- RabbitMQ management UI: http://localhost:15672 (guest/guest)
+- Web server: <http://localhost:8000>
+- RabbitMQ management UI: <http://localhost:15672> (guest/guest)
