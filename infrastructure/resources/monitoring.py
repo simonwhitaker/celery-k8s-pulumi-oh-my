@@ -1,17 +1,19 @@
 """Prometheus and KEDA infrastructure for HPA scaling"""
 
-import pulumi_kubernetes as k8s
+from pulumi_kubernetes.core.v1 import Namespace
+from pulumi_kubernetes.helm.v3 import Release, ReleaseArgs, RepositoryOptsArgs
+from pulumi_kubernetes.meta.v1 import ObjectMetaArgs
 
-monitoring_namespace = k8s.core.v1.Namespace(
+monitoring_namespace = Namespace(
     "monitoring",
-    metadata=k8s.meta.v1.ObjectMetaArgs(name="monitoring"),
+    metadata=ObjectMetaArgs(name="monitoring"),
 )
 
-prometheus = k8s.helm.v3.Release(
+prometheus = Release(
     "prometheus",
-    k8s.helm.v3.ReleaseArgs(
+    ReleaseArgs(
         chart="prometheus",
-        repository_opts=k8s.helm.v3.RepositoryOptsArgs(
+        repository_opts=RepositoryOptsArgs(
             repo="https://prometheus-community.github.io/helm-charts",
         ),
         namespace=monitoring_namespace.metadata.name,
@@ -36,11 +38,11 @@ prometheus_server_url = prometheus.status.apply(
     lambda status: f"http://{status['name']}-server.monitoring.svc:80"
 )
 
-keda = k8s.helm.v3.Release(
+keda = Release(
     "keda",
-    k8s.helm.v3.ReleaseArgs(
+    ReleaseArgs(
         chart="keda",
-        repository_opts=k8s.helm.v3.RepositoryOptsArgs(
+        repository_opts=RepositoryOptsArgs(
             repo="https://kedacore.github.io/charts",
         ),
         namespace=monitoring_namespace.metadata.name,

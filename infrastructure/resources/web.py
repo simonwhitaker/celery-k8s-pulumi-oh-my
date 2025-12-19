@@ -1,28 +1,36 @@
-"""A Kubernetes Python Pulumi program"""
-
-import pulumi_kubernetes as k8s
+from pulumi_kubernetes.apps.v1 import Deployment, DeploymentSpecArgs
+from pulumi_kubernetes.core.v1 import (
+    ContainerArgs,
+    EnvVarArgs,
+    PodSpecArgs,
+    PodTemplateSpecArgs,
+    Service,
+    ServicePortArgs,
+    ServiceSpecArgs,
+)
+from pulumi_kubernetes.meta.v1 import LabelSelectorArgs, ObjectMetaArgs
 
 from resources.queue import celery_broker_url
 
 web_labels = {"app": "web"}
 
 
-web = k8s.apps.v1.Deployment(
+web = Deployment(
     "web",
-    metadata=k8s.meta.v1.ObjectMetaArgs(labels=web_labels),
-    spec=k8s.apps.v1.DeploymentSpecArgs(
-        selector=k8s.meta.v1.LabelSelectorArgs(match_labels=web_labels),
+    metadata=ObjectMetaArgs(labels=web_labels),
+    spec=DeploymentSpecArgs(
+        selector=LabelSelectorArgs(match_labels=web_labels),
         replicas=2,
-        template=k8s.core.v1.PodTemplateSpecArgs(
-            metadata=k8s.meta.v1.ObjectMetaArgs(labels=web_labels),
-            spec=k8s.core.v1.PodSpecArgs(
+        template=PodTemplateSpecArgs(
+            metadata=ObjectMetaArgs(labels=web_labels),
+            spec=PodSpecArgs(
                 containers=[
-                    k8s.core.v1.ContainerArgs(
+                    ContainerArgs(
                         name="web",
                         image="celery-demo",
                         image_pull_policy="Never",
                         env=[
-                            k8s.core.v1.EnvVarArgs(
+                            EnvVarArgs(
                                 name="CELERY_BROKER_URL",
                                 value=celery_broker_url,
                             ),
@@ -35,13 +43,13 @@ web = k8s.apps.v1.Deployment(
 )
 
 
-web_service = k8s.core.v1.Service(
+web_service = Service(
     "celery-demo-service",
-    metadata=k8s.meta.v1.ObjectMetaArgs(labels=web_labels),
-    spec=k8s.core.v1.ServiceSpecArgs(
+    metadata=ObjectMetaArgs(labels=web_labels),
+    spec=ServiceSpecArgs(
         selector=web_labels,
         ports=[
-            k8s.core.v1.ServicePortArgs(
+            ServicePortArgs(
                 protocol="TCP",
                 port=80,
                 target_port=8000,
