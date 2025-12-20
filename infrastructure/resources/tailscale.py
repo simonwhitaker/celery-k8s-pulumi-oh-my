@@ -1,5 +1,3 @@
-"""Prometheus and KEDA infrastructure for HPA scaling"""
-
 import pulumi
 from pulumi_kubernetes.helm.v3 import Release, ReleaseArgs, RepositoryOptsArgs
 
