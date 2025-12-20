@@ -1,3 +1,4 @@
+from pulumi import ResourceOptions
 from pulumi_kubernetes.apps.v1 import Deployment, DeploymentSpecArgs
 from pulumi_kubernetes.core.v1 import (
     ContainerArgs,
@@ -10,6 +11,8 @@ from pulumi_kubernetes.core.v1 import (
     ServiceSpecArgs,
 )
 from pulumi_kubernetes.meta.v1 import LabelSelectorArgs, ObjectMetaArgs
+
+from resources.tailscale import tailscale_operator
 
 RABBIT_SERVICE_NAME = "rabbitmq"
 
@@ -80,6 +83,15 @@ rabbit_service = Service(
             ),
         ],
         type="ClusterIP",
+    ),
+    opts=ResourceOptions(
+        depends_on=[
+            # Using the tailscale.com/expose annotation implicitly adds a finaliser to this resource to clean up its
+            # tailscale exposure on deletion. That requires that the tailscale operator is still running. If the
+            # tailscale operator is deleted first, the finaliser cannot be cleaned up and the service deletion will
+            # hang.
+            tailscale_operator,
+        ]
     ),
 )
 
