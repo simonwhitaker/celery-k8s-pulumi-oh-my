@@ -53,6 +53,9 @@ rabbit_service = Service(
     metadata=ObjectMetaArgs(
         name="rabbitmq",
         labels={"app": "rabbitmq"},
+        annotations={
+            "tailscale.com/expose": "true",
+        },
     ),
     spec=ServiceSpecArgs(
         selector={"app": "rabbitmq"},
@@ -82,24 +85,4 @@ rabbit_service = Service(
 
 celery_broker_url = rabbit_service.metadata.apply(
     lambda metadata: f"amqp://guest:guest@{metadata.name}:5672//"
-)
-
-rabbit_management_lb = Service(
-    "rabbitmq-management-lb",
-    metadata=ObjectMetaArgs(
-        name="rabbitmq-management-lb",
-        labels={"app": "rabbitmq"},
-    ),
-    spec=ServiceSpecArgs(
-        selector={"app": "rabbitmq"},
-        ports=[
-            ServicePortArgs(
-                protocol="TCP",
-                port=15672,
-                target_port=15672,
-                name="management",
-            ),
-        ],
-        type="LoadBalancer",
-    ),
 )
