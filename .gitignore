@@ -9,3 +9,4 @@ wheels/
 # Virtual environments
 .venv
 infrastructure/.pulumi
+infrastructure/Pulumi.*.yaml
