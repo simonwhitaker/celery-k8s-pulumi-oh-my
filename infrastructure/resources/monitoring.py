@@ -1,12 +1,33 @@
 """Prometheus and KEDA infrastructure for HPA scaling"""
 
+import yaml
 from pulumi_kubernetes.core.v1 import Namespace
 from pulumi_kubernetes.helm.v3 import Release, ReleaseArgs, RepositoryOptsArgs
 from pulumi_kubernetes.meta.v1 import ObjectMetaArgs
 
+from resources.queue import rabbit_service
+
 monitoring_namespace = Namespace(
     "monitoring",
     metadata=ObjectMetaArgs(name="monitoring"),
+)
+
+extra_scrape_configs = rabbit_service.metadata.name.apply(
+    lambda rabbit_service_name: yaml.dump(
+        [
+            {
+                "job_name": "rabbitmq",
+                "static_configs": [
+                    {
+                        "targets": [
+                            f"{rabbit_service_name}.default.svc:15692",
+                        ],
+                    }
+                ],
+                "metrics_path": "/metrics",
+            }
+        ]
+    )
 )
 
 prometheus = Release(
@@ -24,12 +45,7 @@ prometheus = Release(
             "alertmanager": {"enabled": False},
             "prometheus-pushgateway": {"enabled": False},
             "kube-state-metrics": {"enabled": True},
-            "extraScrapeConfigs": """
-- job_name: 'rabbitmq'
-  static_configs:
-    - targets: ['rabbitmq.default.svc:15692']
-  metrics_path: /metrics
-""",
+            "extraScrapeConfigs": extra_scrape_configs,
         },
     ),
 )
