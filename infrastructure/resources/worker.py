@@ -11,12 +11,7 @@ from pulumi_kubernetes.core.v1 import (
 from pulumi_kubernetes.meta.v1 import LabelSelectorArgs, ObjectMetaArgs
 
 from resources.monitoring import keda, prometheus_server_url
-from resources.queue import rabbit_service
-
-celery_broker_url = rabbit_service.metadata.apply(
-    lambda metadata: f"amqp://guest:guest@{metadata.name}:5672//"
-)
-
+from resources.queue import celery_broker_url
 
 worker = Deployment(
     "worker",

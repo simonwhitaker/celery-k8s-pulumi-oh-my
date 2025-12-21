@@ -29,8 +29,8 @@ _rabbit = Deployment(
                         name="rabbitmq",
                         image="rabbitmq:3-management",
                         ports=[
-                            ContainerPortArgs(container_port=5672),
-                            ContainerPortArgs(container_port=15672),
+                            ContainerPortArgs(container_port=5672, name="rabbitmq"),
+                            ContainerPortArgs(container_port=15672, name="management"),
                             ContainerPortArgs(container_port=15692, name="prometheus"),
                         ],
                         env=[
