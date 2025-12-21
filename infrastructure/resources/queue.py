@@ -51,14 +51,12 @@ _rabbit = Deployment(
     ),
 )
 
+# Expose rabbitmq and prometheus ports inside the cluster
 rabbit_service = Service(
     "rabbitmq-service",
     metadata=ObjectMetaArgs(
         name="rabbitmq",
         labels={"app": "rabbitmq"},
-        annotations={
-            "tailscale.com/expose": "true",
-        },
     ),
     spec=ServiceSpecArgs(
         selector={"app": "rabbitmq"},
@@ -71,12 +69,6 @@ rabbit_service = Service(
             ),
             ServicePortArgs(
                 protocol="TCP",
-                port=15672,
-                target_port=15672,
-                name="management",
-            ),
-            ServicePortArgs(
-                protocol="TCP",
                 port=15692,
                 target_port=15692,
                 name="prometheus",
@@ -84,15 +76,29 @@ rabbit_service = Service(
         ],
         type="ClusterIP",
     ),
-    opts=ResourceOptions(
-        depends_on=[
-            # Using the tailscale.com/expose annotation implicitly adds a finaliser to this resource to clean up its
-            # tailscale exposure on deletion. That requires that the tailscale operator is still running. If the
-            # tailscale operator is deleted first, the finaliser cannot be cleaned up and the service deletion will
-            # hang.
-            tailscale_operator,
-        ]
+)
+
+# Expose the management UI via a load balancer on Tailscale
+rabbit_management_service = Service(
+    "rabbitmq-management-service",
+    metadata=ObjectMetaArgs(
+        name="rabbitmq-management",
+        labels={"app": "rabbitmq"},
     ),
+    spec=ServiceSpecArgs(
+        selector={"app": "rabbitmq"},
+        ports=[
+            ServicePortArgs(
+                protocol="TCP",
+                port=80,
+                target_port=15672,
+                name="management",
+            ),
+        ],
+        type="LoadBalancer",
+        load_balancer_class="tailscale",
+    ),
+    opts=ResourceOptions(depends_on=[tailscale_operator]),
 )
 
 celery_broker_url = rabbit_service.metadata.apply(
