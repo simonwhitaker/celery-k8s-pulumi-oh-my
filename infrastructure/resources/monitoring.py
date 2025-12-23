@@ -35,6 +35,7 @@ prometheus = k8s.helm.v3.Release(
         repository_opts=k8s.helm.v3.RepositoryOptsArgs(
             repo="https://prometheus-community.github.io/helm-charts",
         ),
+        version="27.52.0",
         namespace=monitoring_namespace.metadata.name,
         values={
             "server": {
@@ -59,6 +60,7 @@ keda = k8s.helm.v3.Release(
         repository_opts=k8s.helm.v3.RepositoryOptsArgs(
             repo="https://kedacore.github.io/charts",
         ),
+        version="2.18.3",
         namespace=monitoring_namespace.metadata.name,
         values={
             "operator": {
