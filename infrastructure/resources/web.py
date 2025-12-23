@@ -1,6 +1,8 @@
+import pulumi
 import pulumi_kubernetes as k8s
 
 from resources.queue import celery_broker_url
+from resources.tailscale import tailscale_operator
 
 web_labels = {"app": "web"}
 
@@ -35,7 +37,10 @@ web = k8s.apps.v1.Deployment(
 
 web_service = k8s.core.v1.Service(
     "celery-demo-service",
-    metadata=k8s.meta.v1.ObjectMetaArgs(labels=web_labels),
+    metadata=k8s.meta.v1.ObjectMetaArgs(
+        name="celery-demo-service",
+        labels=web_labels,
+    ),
     spec=k8s.core.v1.ServiceSpecArgs(
         selector=web_labels,
         ports=[
@@ -46,5 +51,32 @@ web_service = k8s.core.v1.Service(
             )
         ],
         type="LoadBalancer",
+    ),
+)
+
+web_service_ingress = k8s.networking.v1.Ingress(
+    "web-ingress",
+    metadata=k8s.meta.v1.ObjectMetaArgs(
+        name="web-ingress",
+    ),
+    spec=k8s.networking.v1.IngressSpecArgs(
+        default_backend=k8s.networking.v1.IngressBackendArgs(
+            service=k8s.networking.v1.IngressServiceBackendArgs(
+                name=web_service.metadata.apply(lambda m: m.name or ""),
+                port=k8s.networking.v1.ServiceBackendPortArgs(number=80),
+            )
+        ),
+        ingress_class_name="tailscale",
+        tls=[
+            k8s.networking.v1.IngressTLSArgs(
+                hosts=["celery-demo"],
+            )
+        ],
+    ),
+    opts=pulumi.ResourceOptions(
+        depends_on=[
+            tailscale_operator,
+            web_service,
+        ]
     ),
 )
