@@ -1,15 +1,13 @@
 """Prometheus and KEDA infrastructure for HPA scaling"""
 
+import pulumi_kubernetes as k8s
 import yaml
-from pulumi_kubernetes.core.v1 import Namespace
-from pulumi_kubernetes.helm.v3 import Release, ReleaseArgs, RepositoryOptsArgs
-from pulumi_kubernetes.meta.v1 import ObjectMetaArgs
 
 from resources.queue import rabbit_service
 
-monitoring_namespace = Namespace(
+monitoring_namespace = k8s.core.v1.Namespace(
     "monitoring",
-    metadata=ObjectMetaArgs(name="monitoring"),
+    metadata=k8s.meta.v1.ObjectMetaArgs(name="monitoring"),
 )
 
 extra_scrape_configs = rabbit_service.metadata.name.apply(
@@ -30,11 +28,11 @@ extra_scrape_configs = rabbit_service.metadata.name.apply(
     )
 )
 
-prometheus = Release(
+prometheus = k8s.helm.v3.Release(
     "prometheus",
-    ReleaseArgs(
+    k8s.helm.v3.ReleaseArgs(
         chart="prometheus",
-        repository_opts=RepositoryOptsArgs(
+        repository_opts=k8s.helm.v3.RepositoryOptsArgs(
             repo="https://prometheus-community.github.io/helm-charts",
         ),
         namespace=monitoring_namespace.metadata.name,
@@ -54,11 +52,11 @@ prometheus_server_url = prometheus.status.apply(
     lambda status: f"http://{status['name']}-server.monitoring.svc:80"
 )
 
-keda = Release(
+keda = k8s.helm.v3.Release(
     "keda",
-    ReleaseArgs(
+    k8s.helm.v3.ReleaseArgs(
         chart="keda",
-        repository_opts=RepositoryOptsArgs(
+        repository_opts=k8s.helm.v3.RepositoryOptsArgs(
             repo="https://kedacore.github.io/charts",
         ),
         namespace=monitoring_namespace.metadata.name,

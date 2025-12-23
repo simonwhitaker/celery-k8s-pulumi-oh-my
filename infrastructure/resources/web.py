@@ -1,36 +1,26 @@
-from pulumi_kubernetes.apps.v1 import Deployment, DeploymentSpecArgs
-from pulumi_kubernetes.core.v1 import (
-    ContainerArgs,
-    EnvVarArgs,
-    PodSpecArgs,
-    PodTemplateSpecArgs,
-    Service,
-    ServicePortArgs,
-    ServiceSpecArgs,
-)
-from pulumi_kubernetes.meta.v1 import LabelSelectorArgs, ObjectMetaArgs
+import pulumi_kubernetes as k8s
 
 from resources.queue import celery_broker_url
 
 web_labels = {"app": "web"}
 
 
-web = Deployment(
+web = k8s.apps.v1.Deployment(
     "web",
-    metadata=ObjectMetaArgs(labels=web_labels),
-    spec=DeploymentSpecArgs(
-        selector=LabelSelectorArgs(match_labels=web_labels),
+    metadata=k8s.meta.v1.ObjectMetaArgs(labels=web_labels),
+    spec=k8s.apps.v1.DeploymentSpecArgs(
+        selector=k8s.meta.v1.LabelSelectorArgs(match_labels=web_labels),
         replicas=2,
-        template=PodTemplateSpecArgs(
-            metadata=ObjectMetaArgs(labels=web_labels),
-            spec=PodSpecArgs(
+        template=k8s.core.v1.PodTemplateSpecArgs(
+            metadata=k8s.meta.v1.ObjectMetaArgs(labels=web_labels),
+            spec=k8s.core.v1.PodSpecArgs(
                 containers=[
-                    ContainerArgs(
+                    k8s.core.v1.ContainerArgs(
                         name="web",
                         image="celery-demo",
                         image_pull_policy="Never",
                         env=[
-                            EnvVarArgs(
+                            k8s.core.v1.EnvVarArgs(
                                 name="CELERY_BROKER_URL",
                                 value=celery_broker_url,
                             ),
@@ -43,13 +33,13 @@ web = Deployment(
 )
 
 
-web_service = Service(
+web_service = k8s.core.v1.Service(
     "celery-demo-service",
-    metadata=ObjectMetaArgs(labels=web_labels),
-    spec=ServiceSpecArgs(
+    metadata=k8s.meta.v1.ObjectMetaArgs(labels=web_labels),
+    spec=k8s.core.v1.ServiceSpecArgs(
         selector=web_labels,
         ports=[
-            ServicePortArgs(
+            k8s.core.v1.ServicePortArgs(
                 protocol="TCP",
                 port=80,
                 target_port=8000,
