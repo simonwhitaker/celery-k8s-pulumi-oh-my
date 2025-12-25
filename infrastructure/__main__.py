@@ -1,5 +1,7 @@
 import pulumi
 
-from resources import celery_broker_url
+import resources
 
-pulumi.export("celery_broker_url", celery_broker_url)
+pulumi.log.info("Loaded resources module")
+for resource_name in resources.__all__:
+    pulumi.log.info(f"- {resource_name}")
