@@ -68,34 +68,52 @@ rabbit_service = k8s.core.v1.Service(
                 target_port=15692,
                 name="prometheus",
             ),
+            k8s.core.v1.ServicePortArgs(
+                protocol="TCP",
+                port=15672,
+                target_port=15672,
+                name="management",
+            ),
         ],
         type="ClusterIP",
     ),
 )
 
-# Expose the management UI via a load balancer on Tailscale
-rabbit_management_service = k8s.core.v1.Service(
-    "rabbitmq-management-service",
+# Ingress to access RabbitMQ management UI via tailscale
+rabbit_management_ingress = k8s.networking.v1.Ingress(
+    "rabbitmq-management-ingress",
     metadata=k8s.meta.v1.ObjectMetaArgs(
-        name="rabbitmq-management",
-        labels={"app": "rabbitmq"},
+        name="rabbitmq-management-ingress",
     ),
-    spec=k8s.core.v1.ServiceSpecArgs(
-        selector={"app": "rabbitmq"},
-        ports=[
-            k8s.core.v1.ServicePortArgs(
-                protocol="TCP",
-                port=80,
-                target_port=15672,
-                name="management",
-            ),
+    spec=k8s.networking.v1.IngressSpecArgs(
+        default_backend=k8s.networking.v1.IngressBackendArgs(
+            service=k8s.networking.v1.IngressServiceBackendArgs(
+                name=rabbit_service.metadata.apply(lambda m: m.name or ""),
+                port=k8s.networking.v1.ServiceBackendPortArgs(number=15672),
+            )
+        ),
+        ingress_class_name="tailscale",
+        tls=[
+            k8s.networking.v1.IngressTLSArgs(
+                hosts=["rabbitmq-mgmt"],
+            )
         ],
-        type="LoadBalancer",
-        load_balancer_class="tailscale",
     ),
-    opts=pulumi.ResourceOptions(depends_on=[tailscale_operator]),
+    opts=pulumi.ResourceOptions(
+        depends_on=[
+            rabbit_service,
+            tailscale_operator,
+        ]
+    ),
 )
 
 celery_broker_url = rabbit_service.metadata.apply(
     lambda metadata: f"amqp://guest:guest@{metadata.name}:5672//"
 )
+
+rabbit_management_ingress_url = rabbit_management_ingress.status.apply(
+    lambda status: f"https://{status.load_balancer.ingress[0].hostname}"
+    if status and status.load_balancer and status.load_balancer.ingress
+    else "unknown"
+)
+pulumi.export("rabbitmq_management_url", rabbit_management_ingress_url)
