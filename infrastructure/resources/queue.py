@@ -3,8 +3,6 @@ import pulumi_kubernetes as k8s
 
 from resources.tailscale import tailscale_operator
 
-RABBIT_SERVICE_NAME = "rabbitmq"
-
 _rabbit = k8s.apps.v1.Deployment(
     "rabbitmq",
     spec=k8s.apps.v1.DeploymentSpecArgs(
