@@ -1,8 +1,7 @@
-from resources import monitoring, tailscale, web, worker
+from resources import monitoring, web, worker
 
 __all__ = [
     "monitoring",
-    "tailscale",
     "web",
     "worker",
 ]
