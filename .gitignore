@@ -10,3 +10,4 @@ wheels/
 .venv
 infrastructure/.pulumi
 infrastructure/Pulumi.*.yaml
+.pulumi
