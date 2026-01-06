@@ -3,22 +3,22 @@
 import pulumi_kubernetes as k8s
 import yaml
 
-from resources.queue import rabbit_service
+from resources.queue import rabbit_cluster
 
 monitoring_namespace = k8s.core.v1.Namespace(
     "monitoring",
     metadata=k8s.meta.v1.ObjectMetaArgs(name="monitoring"),
 )
 
-extra_scrape_configs = rabbit_service.metadata.name.apply(
-    lambda rabbit_service_name: yaml.dump(
+extra_scrape_configs = rabbit_cluster.metadata.apply(  # type: ignore
+    lambda meta: yaml.dump(
         [
             {
                 "job_name": "rabbitmq",
                 "static_configs": [
                     {
                         "targets": [
-                            f"{rabbit_service_name}.default.svc:15692",
+                            f"{meta['name']}.default.svc:15692",
                         ],
                     }
                 ],
