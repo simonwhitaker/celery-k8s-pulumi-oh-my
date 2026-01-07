@@ -46,7 +46,29 @@ rabbit_cluster = k8s.apiextensions.CustomResource(
             "externalSecret": {
                 "name": rabbit_admin_user.metadata.name,
             }
-        }
+        },
+        "override": {
+            "statefulSet": {
+                "spec": {
+                    "template": {
+                        "spec": {
+                            "containers": [
+                                {
+                                    "name": "rabbitmq",
+                                    "env": [
+                                        {
+                                            # Enable getting per-queue metrics (e.g. filtering on queue=celery)
+                                            "name": "RABBITMQ_SERVER_ADDITIONAL_ERL_ARGS",
+                                            "value": "-rabbitmq_prometheus return_per_object_metrics true",
+                                        }
+                                    ],
+                                }
+                            ]
+                        }
+                    }
+                }
+            }
+        },
     },
     opts=pulumi.ResourceOptions(
         depends_on=[
