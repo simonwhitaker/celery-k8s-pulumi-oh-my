@@ -2,7 +2,7 @@ import pulumi
 import pulumi_kubernetes as k8s
 
 from resources.monitoring import keda, prometheus_server_url
-from resources.queue import celery_broker_url
+from resources.queue import rabbit_credentials_secret_name
 
 worker = k8s.apps.v1.Deployment(
     "worker",
@@ -30,7 +30,12 @@ worker = k8s.apps.v1.Deployment(
                         env=[
                             k8s.core.v1.EnvVarArgs(
                                 name="CELERY_BROKER_URL",
-                                value=celery_broker_url,
+                                value_from=k8s.core.v1.EnvVarSourceArgs(
+                                    secret_key_ref=k8s.core.v1.SecretKeySelectorArgs(
+                                        name=rabbit_credentials_secret_name,
+                                        key="connection_string",
+                                    ),
+                                ),
                             ),
                             k8s.core.v1.EnvVarArgs(
                                 name="CELERYD_PREFETCH_MULTIPLIER",
