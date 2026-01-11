@@ -1,19 +1,17 @@
 import pulumi
 import pulumi_kubernetes as k8s
 
-CLUSTER_NAME = "rabbitmq-cluster"
-
 rabbit_operator = k8s.yaml.v2.ConfigFile(
     "rabbitmq-operator",
     file="https://github.com/rabbitmq/cluster-operator/releases/download/v2.18.0/cluster-operator.yml",
 )
 
-rabbit_cluster = k8s.apiextensions.CustomResource(
-    "rabbitmq-cluster",
+celery_cluster = k8s.apiextensions.CustomResource(
+    "celery-cluster",
     api_version="rabbitmq.com/v1beta1",
     kind="RabbitmqCluster",
     metadata=k8s.meta.v1.ObjectMetaArgs(
-        name=CLUSTER_NAME,
+        name="celery-cluster",
     ),
     spec={
         "override": {
@@ -46,4 +44,6 @@ rabbit_cluster = k8s.apiextensions.CustomResource(
 
 # The RabbitmqCluster operator creates a secret named <cluster-name>-default-user
 # containing the auto-generated credentials (username, password, host, port)
-rabbit_credentials_secret_name = f"{CLUSTER_NAME}-default-user"
+rabbit_credentials_secret_name = celery_cluster.metadata.apply(  # type: ignore
+    lambda meta: f"{meta['name']}-default-user"
+)

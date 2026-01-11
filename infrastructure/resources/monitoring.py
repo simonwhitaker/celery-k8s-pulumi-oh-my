@@ -3,14 +3,14 @@
 import pulumi_kubernetes as k8s
 import yaml
 
-from resources.queue import rabbit_cluster
+from resources.queue import celery_cluster
 
 monitoring_namespace = k8s.core.v1.Namespace(
     "monitoring",
     metadata=k8s.meta.v1.ObjectMetaArgs(name="monitoring"),
 )
 
-extra_scrape_configs = rabbit_cluster.metadata.apply(  # type: ignore
+extra_scrape_configs = celery_cluster.metadata.apply(  # type: ignore
     lambda meta: yaml.dump(
         [
             {
